@@ -57,7 +57,7 @@ public class JLineDemo {
                     handleCommand(line.trim());
                 } catch (UserInterruptException e) {
                     // 处理 Ctrl+C（不退出，仅提示）
-                    System.out.println("\n请输入 exit 退出程序");
+                    break;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -73,6 +73,7 @@ public class JLineDemo {
     private static void handleCommand(String command) throws InterruptedException {
         switch (command) {
             case "login":
+                System.out.println(Main.class.getProtectionDomain().getCodeSource().getLocation().getPath());
                 Thread.getAllStackTraces().forEach((key, value) -> {
                     System.out.println(key.getName());
                 });
@@ -94,7 +95,7 @@ public class JLineDemo {
 
                 // 3. 关闭进度条（自动输出“完成”）
                 progressBar.close();
-                System.out.println("文件下载完成！");
+                System.out.println("文件下载完成1！");
                 System.out.println("执行登出逻辑...");
                 break;
             case "help":
