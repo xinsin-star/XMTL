@@ -37,10 +37,10 @@ public class JLineDemo {
                     .completer(new StringsCompleter(COMMANDS))
                     .build();
 
-            // 3. 自定义提示符（绿色的 "demo>"）
+            // 3. 自定义提示符（绿色的 "XMTL>"）
             String prompt = new AttributedStringBuilder()
-                    .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN))
-                    .append("demo> ")
+                    .style(AttributedStyle.DEFAULT.foreground(AttributedStyle.MAGENTA))
+                    .append("XMTL> ")
                     .toAnsi();
 
             // 4. 交互循环

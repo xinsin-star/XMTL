@@ -2,10 +2,12 @@ package top.xinsin.parser;
 
 
 import top.xinsin.annotation.Command;
+import top.xinsin.entity.CommandEntity;
 
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -57,9 +59,43 @@ public class XMTLApplication {
                 classes = xmtlApplication.getClassesFiltered(classFiles, pathPackageName);
             }
         }
-        classes.forEach(System.out::println);
+        List<CommandEntity> commandEntities = xmtlApplication.parseMethod(classes);
+
     }
 
+    /**
+     * 解析出筛选好的类中的方法
+     * @param classes 筛选完成的类
+     * @return 解析出实体类对象
+     */
+    private List<CommandEntity> parseMethod(List<Class<?>> classes) {
+        List<CommandEntity> commandEntities = new ArrayList<>();
+        for (Class<?> aClass : classes) {
+            for (Method method : aClass.getMethods()) {
+                for (Annotation annotation : method.getAnnotations()) {
+                    if (annotation.annotationType().equals(Command.class)) {
+                        Command command = (Command) annotation;
+                        if (method.getParameters().length == 2) {
+                            commandEntities.add(new CommandEntity()
+                                    .setName(command.name())
+                                    .setDescription(command.description())
+                                    .setClazz(aClass)
+                                    .setMethod(method));
+                        } else {
+                            throw new RuntimeException(aClass.getName() + ":" + method.getName() + "() 的参数数量不正确, 应该为2个参数, 实际为: " + method.getParameters().length);
+                        }
+                    }
+                }
+            }
+        }
+        return commandEntities;
+    }
+
+    /**
+     * 筛选出带有指定注解的类
+     * @param classes 筛选后的类集合
+     * @param clazz 待筛选的类
+     */
     private void getClassesByPackage(List<Class<?>> classes, Class<?> clazz) {
         for (Class<?> aClass : commandAnnotation) {
             for (Annotation annotation : clazz.getAnnotations()) {
@@ -76,6 +112,13 @@ public class XMTLApplication {
             }
         }
     }
+
+    /**
+     * 根据文件和包名来实体化类并进行筛选
+     * @param classFiles class文件集合
+     * @param packageName 包名
+     * @return 筛选后的类集合
+     */
     private List<Class<?>> getClassesFiltered(List<File> classFiles, String packageName) {
         ArrayList<Class<?>> classes = new ArrayList<>();
         for (File classFile : classFiles) {
@@ -111,6 +154,13 @@ public class XMTLApplication {
             }
         }
     }
+
+    /**
+     * 通过字节码流来加载类
+     * @param classPath class文件路径
+     * @param packageName 包名
+     * @return 加载后的类
+     */
     private Class<?> getClassByByte(File classPath, String packageName) {
         try (InputStream is = new FileInputStream(classPath);
              ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
