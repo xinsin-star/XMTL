@@ -60,7 +60,7 @@ public class XMTLApplication {
             }
         }
         List<CommandEntity> commandEntities = xmtlApplication.parseMethod(classes);
-
+        TerminalControlApplication.startTerminalControl(commandEntities);
     }
 
     /**
@@ -75,14 +75,17 @@ public class XMTLApplication {
                 for (Annotation annotation : method.getAnnotations()) {
                     if (annotation.annotationType().equals(Command.class)) {
                         Command command = (Command) annotation;
-                        if (method.getParameters().length == 2) {
-                            commandEntities.add(new CommandEntity()
-                                    .setName(command.name())
-                                    .setDescription(command.description())
-                                    .setClazz(aClass)
-                                    .setMethod(method));
-                        } else {
-                            throw new RuntimeException(aClass.getName() + ":" + method.getName() + "() 的参数数量不正确, 应该为2个参数, 实际为: " + method.getParameters().length);
+                        CommandEntity commandEntity = commandEntities.stream().filter(item -> item.getName().equals(command.name())).findFirst().orElse(null);
+                        if (commandEntity == null) {
+                            if ((command.args() == 0 || method.getParameters().length == command.args())) {
+                                commandEntities.add(new CommandEntity()
+                                        .setName(command.name())
+                                        .setDescription(command.description())
+                                        .setClazz(aClass)
+                                        .setMethod(method));
+                            } else {
+                                throw new RuntimeException(aClass.getName() + ":" + method.getName() + "() 的参数数量不正确, 应该为2个参数, 实际为: " + method.getParameters().length);
+                            }
                         }
                     }
                 }
@@ -182,6 +185,13 @@ public class XMTLApplication {
         }
     }
 
+    /**
+     * 从jar中找到主类和包名并进行整包扫描取出主类的class
+     * @param jarFile jar文件
+     * @param jarEntry jar条目
+     * @param packageName 包名
+     * @return 加载后的类
+     */
     private Class<?> getClassLoaderByJar(JarFile jarFile, JarEntry jarEntry, String packageName) {
         try {
             try (InputStream is = jarFile.getInputStream(jarEntry);

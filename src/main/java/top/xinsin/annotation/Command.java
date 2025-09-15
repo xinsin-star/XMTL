@@ -11,4 +11,5 @@ public @interface Command {
     String name();
     String description() default "";
     Class<?>[] children() default {};
+    int args() default 2;
 }
